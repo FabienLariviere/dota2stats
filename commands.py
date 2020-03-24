@@ -1,12 +1,40 @@
 import API
 import json
 
-
 Steam = API.Steam()
 Dota = API.Dota()
 
 hero_list = []
 user_list = []
+conf = ""
+
+
+def checkLenght(text, needlenght):
+    if len(text) == needlenght:
+        return True
+    else:
+        return False
+
+
+def checkSymbols(text, type):
+    if type == 1:
+        if text.isdigit():
+            return True
+        else:
+            return False
+    elif type == 2:
+        if text.isalpha():
+            return True
+        else:
+            return False
+
+
+def connectConfig():
+    global conf
+    with open("config.json", "r") as fconf:
+        conf = json.load(fconf)
+        fconf.close()
+        return conf
 
 
 def checkUserlist(sender):
@@ -60,33 +88,29 @@ def getHeroes(hero_id):
     return 'Not Found'
 
 
-def getAccount(steamid):
+def findAccountID(steamid):
 
     """ Возвращает пользователя по Steam32 """
 
     steamid64 = int(steamid) + 76561197960265728
-    players = Steam.getAccount(steamid64)['players']
+    players = Steam.findAccountID(steamid64)['players']
     if players:
         for player in players:
-            # print(f'Name: {player["personaname"]} '
-            #       f'\nSteam32: {str(int(player["steamid"]) - 76561197960265728)} '
-            #       f'\nSteam64: {player["steamid"]} '
-            #       f'\nURL: {player["profileurl"]}')
             return player
     else:
         return False
 
 
-def findAccount(steamlogin):
+def findAccountURL(steamlogin):
 
     """ Поиск пользователя по уникальной ссылке """
 
-    player = Steam.findAccount(steamlogin)
+    player = Steam.findAccountURL(steamlogin)
     if player['success'] == 1:
-        # print(f'Steam64: {player["steamid"]}')
-        getAccount(int(player['steamid']) - 76561197960265728)
+        player = findAccountID(int(player['steamid'])-76561197960265728)
+        return player
     elif player['success'] == 42:
-        print('Не найдено')
+        return False
     else:
         print(player)
 
@@ -123,10 +147,10 @@ def getMatchInfo(match_id, account_id=None):
 
 
 def getHistory(account_id=None, hero_id=None, matches_requested=5):
-
     """ Возвращает историю матчей """
 
     matches = Dota.getHistory(account_id, hero_id, matches_requested)
+    response = ''
     for match in matches['matches']:
         if account_id:
             for player in match['players']:
@@ -144,7 +168,12 @@ def getHistory(account_id=None, hero_id=None, matches_requested=5):
                         type = 'Turbo'
                     else:
                         print(player[2])
-                    print(f'{win} [{match["match_id"]}] [{type}] {heroname}[{player[1]["level"]}] {kda[0]}/{kda[1]}/{kda[2]}')
+                    if win:
+                        win = '🏆'
+                    else:
+                        win = '❌'
+                    print(player)
+                    response += f'{win} [{match["match_id"]}] [{type}] {heroname}[{player[1]["level"]}] 📊 {kda[0]}/{kda[1]}/{kda[2]} 💰 {player[1]["gold_spent"]}\n'
         else:
             print(match)
-
+    return response

@@ -71,14 +71,14 @@ class VK:
 
 
 class Steam:
-    def getAccount(self, steamid):
+    def findAccountID(self, steamid):
         response = requests.get('http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/', params={
             'steamids': steamid,
             'key': key
         }).json()['response']
         return response
 
-    def findAccount(self, steamname):
+    def findAccountURL(self, steamname):
         response = requests.get('http://api.steampowered.com/ISteamUser/ResolveVanityURL/v1/', params={
             'vanityurl': steamname,
             'key': key

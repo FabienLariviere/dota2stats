@@ -1,0 +1,44 @@
+{
+  "keys": {
+    "vk_token": "a411be2417bcdc9f4abbfa7c733273c0035492052ee699e0252f2cbad4cafa969ea8d4ea606fa01c3bd52",
+    "vk_group": 188677997
+  },
+  "messages": {
+    "help": {
+      "help_text": "\uD83D\uDCDC Список доступных команд\nОбязатлельные поля [***]\nНеобязательные поля {***}\nВариации (***)\n\n",
+      "commands_description": [
+        {"/help": "Список команд"},
+        {"/add [Steam32]": "Привязать SteamID"},
+        {"/delete (/del)": "Отвязать SteamID"},
+        {"/profile": "Ваш профиль Steam"},
+        {"/findid (/fid) [Steam32]": "Найти пользователя по SteamID"},
+        {"/findurl (/furl) [URL]": "Найти пользователя по URL"},
+        {"/lastmatches (/lm) {Steam32} [1-10]": "Последние матчи пользователя"}
+      ]
+    },
+    "add": {
+      "success": "\uD83D\uDCE5 SteamID успешно привязан к вашему аккаунту",
+      "not_found": "\uD83D\uDD0E Пользователь не найден",
+      "error": "\uD83D\uDCE6 К Вашему аккаунту уже привязан SteamID"
+    },
+    "delete": {
+      "success": "\uD83D\uDCE4 SteamID отвязан от Вашего аккаунта",
+      "error": "\uD83D\uDEAB К Вашему аккаунту не привязан SteamID"
+    },
+    "find": {
+      "success": "\uD83D\uDCDD Информация об аккаунте\n\n",
+      "error32": "\uD83D\uDD0E Аккаунт с данным Steam32 не найден",
+      "errorurl": "\uD83D\uDD0E Аккаунт с данным URL не найден"
+    },
+    "matches": {
+      "last": "\uD83D\uDCDD Последние матчи\n\n"
+    },
+    "check_errors": {
+      "need_numbers": "\uD83D\uDD22 Используйте цифры в аргументах для данный команды",
+      "need_letters": "\uD83D\uDD20 Используйте буквы в аргументах для данный команды",
+      "error_args": "\uD83D\uDD04 Проверьте количество аргументов команды",
+      "not_link": "\uD83D\uDD0E Ваш аккаунт не привязан, введите SteamID",
+      "command_notfound": "\uD83D\uDEAB Нет такой команды, список моих команд /help"
+    }
+  }
+}
