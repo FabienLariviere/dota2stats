@@ -1,6 +1,6 @@
 import requests
 
-key = '1C44A09A58FF482AF0582D9A85D4ABE9'
+key = '***'
 
 
 def APIHelp():
