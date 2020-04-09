@@ -87,20 +87,6 @@ class Steam:
 
 
 class Dota:
-    def getServerStreamID(self, steamid):
-        response = requests.get('http://api.steampowered.com/IDOTA2StreamSystem_570/GetBroadcasterInfo/v1/', params={
-            'broadcaster_steam_id': steamid,
-            'key': key
-        }).json()
-        return response
-
-    def getLiveMatchInfo(self, streamid):
-        response = requests.get('http://api.steampowered.com/IDOTA2MatchStats_570/GetRealtimeStats/v1/', params={
-            'server_steam_id': streamid,
-            'key': key
-        }).json()
-        return response
-
     def getMatchInfo(self, match_id):
         response = requests.get('http://api.steampowered.com/IDOTA2Match_570/GetMatchDetails/v1/', params={
             'match_id': match_id,
