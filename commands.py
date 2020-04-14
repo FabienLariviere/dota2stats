@@ -14,6 +14,7 @@ Dota = API.Dota()
 
 hero_list = []
 user_list = []
+quests_list = {}
 
 conf = connectConfig()
 messages = conf['messages']
@@ -23,53 +24,25 @@ group_id = conf['keys']['vk_group']
 vk = API.VK(token, group_id)
 
 
-def checkAll(sender, text, lenght=2, symbol=1, search=False):
+def checkAll(sender, text, lenght, symbol, return_word):
     if checkLenght(text, lenght):
         if lenght == 1:
-            if search:
-                user = checkUserlist(sender)
-                if user:
-                    return user
-                else:
-                    vk.sendMessage(sender, messages['check_errors']['not_link'])
-
-        elif lenght == 2:
-            # Проверка с привязанным аккаунтом
-            if checkSymbols(text[1], symbol):
-                if search:
-                    return text[1]
-                else:
-                    user = checkUserlist(sender)
-                    if user:
-                        return user
-                    else:
-                        vk.sendMessage(sender, messages['check_errors']['not_link'])
+            return True
+        for _lenght in range(lenght):
+            if _lenght == 0:
+                pass
             else:
-                if symbol == 1:
-                    vk.sendMessage(sender, messages['check_errors']['need_numbers'])
-                elif symbol == 2:
-                    vk.sendMessage(sender, messages['check_errors']['need_letters'])
-
-        elif lenght == 3:
-            # Проверка с введенным SteamID
-            if checkSymbols(text[1], 1):
-                if checkSymbols(text[2], symbol):
-                    user = findAccountID(text[1])
-                    if user:
-                        return user
-                    else:
-                        vk.sendMessage(sender, messages['find']['error32'])
+                if checkSymbols(text[_lenght], symbol[_lenght-1]):
+                    pass
                 else:
                     if symbol == 1:
                         vk.sendMessage(sender, messages['check_errors']['need_numbers'])
                     elif symbol == 2:
                         vk.sendMessage(sender, messages['check_errors']['need_letters'])
-            else:
-                vk.sendMessage(sender, messages['check_errors']['need_numbers'])
+                    return False
     else:
-        # print(sender, text, lenght, symbol, search)
-        pass
-    return False
+        return False
+    return text[return_word]
 
 
 def checkLenght(text, needlenght):
@@ -104,7 +77,7 @@ def connectUsers():
     with open('users.json') as u:
         user_list = json.load(u)
         u.close()
-
+    print('Пользователи загружены ' + str(len(getUsers())))
 
 def delUser(vk):
     for user in user_list:
@@ -113,7 +86,7 @@ def delUser(vk):
 
 
 def addUser(vk, steam32):
-    usr = {"vk": vk, "steam32": int(steam32)}
+    usr = {"vk": vk, "steam32": int(steam32), "balance": 0}
     user_list.append(usr)
 
 
@@ -127,6 +100,53 @@ def disconnectUsers():
     with open('users.json', 'w') as h:
         h.write(data)
         h.close()
+    print('Пользователи сохранены')
+
+def disconnectQuests():
+    global quests_list
+    data = json.dumps(quests_list)
+    with open('quests.json', 'w') as h:
+        h.write(data)
+        h.close()
+    print('Квесты сохранены')
+
+def connectQuests():
+    global quests_list
+    with open('quests.json') as h:
+        quests_list = json.load(h)
+        h.close()
+    print('Квесты загружены')
+
+
+def getQuests():
+    return quests_list['quests']
+
+
+def completeQuest(user, qid):
+    quests_list['quests'][qid]['users_complete'].append(user)
+
+
+def Quests(sender, qid=None, showcomplete=False):
+        q = getQuests()
+        response = ''
+        if not qid:
+            for quest in q:
+                if showcomplete and sender in quest['users_complete']:
+                    response += f'🏆 [{quest["id"]}] {quest["about"]}: {quest["reward"]}🔶\n'
+                if not showcomplete and sender not in quest['users_complete']:
+                    response += f'❌ [{quest["id"]}] {quest["about"]}: {quest["reward"]}🔶\n'
+            if response:
+                return response
+        else:
+            for quest in q:
+                if quest['id'] == int(qid):
+                    if sender in quest['users_complete']:
+                        response = f'🏆 [{quest["id"]}] {quest["about"]}: {quest["reward"]}🔶\n'
+                    if sender not in quest['users_complete']:
+                        response = f'❌ [{quest["id"]}] {quest["about"]}: {quest["reward"]}🔶\n'
+                    return response
+        return ''
+
 
 
 def connectHeroes():
@@ -134,13 +154,20 @@ def connectHeroes():
     with open('heroes.json') as h:
         hero_list = json.load(h)
         h.close()
+    print('Герои загружены')
 
 
-def getHeroes(hero_id):
-    for hero in hero_list:
-        if hero['id'] == hero_id:
-            return hero['name']
-    return 'Not Found'
+def getHeroes(hero_id=None, hero_name=None):
+    if hero_id:
+        for hero in hero_list:
+            if hero['id'] == hero_id:
+                return hero['name']
+        return 'Not Found'
+    elif hero_name:
+        for hero in hero_list:
+            if hero['name'] == hero_name:
+                return hero['id']
+        return False
 
 
 def findAccountID(steamid):
@@ -206,18 +233,20 @@ def getMatchInfo(match_id, account_id=None):
         print(match)
 
 
-def getHistory(account_id=None, hero_id=None, matches_requested=5):
+def getHistory(account_id=None, hero_id=None, json=False, matches_requested=5):
     """ Возвращает историю матчей """
 
     matches = Dota.getHistory(account_id, hero_id, matches_requested)
     response = ''
+    if json:
+        response = []
     if matches['status'] == 1:
         for match in matches['matches']:
             if account_id:
                 for player in match['players']:
                     if player['account_id'] == account_id:
                         player = getMatchInfo(match['match_id'], account_id)
-                        kda = player[1]["kills"], player[1]["deaths"], player[1]["assists"]
+                        kda = player[1]['kills'], player[1]['deaths'], player[1]['assists']
                         win = False
                         # radiant-win # command radiant/dire
                         if player[0] and player[1]['player_slot'] <= 4:
@@ -237,12 +266,15 @@ def getHistory(account_id=None, hero_id=None, matches_requested=5):
                         else:
                             print(player[2])
                         if win:
-                            win = '🏆'
+                            _win = '🏆'
                         else:
-                            win = '❌'
-                        response += f'{win} [{match["match_id"]}] [{type}] {heroname}[{player[1]["level"]}] 📊 {kda[0]}/{kda[1]}/{kda[2]} 💰 {player[1]["gold_spent"]}\n'
+                            _win = '❌'
+                        if not json:
+                            response += f'{_win} [{match["match_id"]}] [{type}] {heroname}[{player[1]["level"]}] 📊 {kda[0]}/{kda[1]}/{kda[2]} 💰 {player[1]["gold_spent"]}\n'
+                        else:
+                            response.append([win, player[1]['hero_id'], [kda[0],kda[1],kda[2]]])
             else:
                 print(match)
+        return response
     else:
         return False
-    return response
