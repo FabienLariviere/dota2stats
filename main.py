@@ -99,6 +99,11 @@ def commandCheckQuest(sender, text):
 
                         if complete:
                             completeQuest(sender, qid - 1)
+                            users = getUsers()
+                            for user in users:
+                                if user['vk'] == sender:
+                                    user['balance'] += reward
+                                    break
                             vk.sendMessage(sender, messages['quests']['complete'])
                         else:
                             vk.sendMessage(sender, messages['quests']['not_complete'])
@@ -115,7 +120,16 @@ def commandCheckQuest(sender, text):
 def commandQuest(sender, text, showcomplete=False):
     if checkAll(sender, text, 1, None, None):
         if showcomplete:
-            response = messages['quests']['list_complete'] + Quests(sender, showcomplete=True)
+            users = getUsers()
+            find = False
+            for user in users:
+                if user['vk'] == sender:
+                    find = True
+                    break
+            if find:
+                response = messages['quests']['list_complete'] + Quests(sender, showcomplete=True)
+            else:
+                response = messages['check_errors']['not_link']
         else:
             response = messages['quests']['list_not_complete'] + Quests(sender)
     else:
@@ -245,9 +259,13 @@ try:
                 commandQuest(sender, text, showcomplete=True)
             elif text[0] == '/balance':
                 users = getUsers()
+                find = False
                 for user in users:
                     if user['vk'] == sender:
+                        find = True
                         vk.sendMessage(sender, f'Ваш баланс: {user["balance"]}')
+                if not find:
+                    vk.sendMessage(sender, messages['check_errors']['not_link'])
             else:
                 vk.sendMessage(sender, messages['check_errors']['command_notfound'])
 except Exception as ex:
